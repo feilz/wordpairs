@@ -1,23 +1,29 @@
 from api.models import Sample, WordRelation, Word
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from api.serializers import SampleSerializer, FileSerializer, word_serializer, wordRelation_serializer
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser, FileUploadParser
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import pagination
 
 from filescanner.views import Filescanner
 
+class LargeResultsSetPagination(pagination.PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
 
 class SampleListCreate(generics.ListAPIView):
     queryset = Sample.objects.all()
     serializer_class = SampleSerializer
 
 
-class WordView(generics.ListCreateAPIView):
+class WordView(generics.ListAPIView):
     queryset = Word.objects.all()
     serializer_class = word_serializer
+    pagination_class = LargeResultsSetPagination
 
 class SingleWordView(generics.RetrieveAPIView):
     serializer_class = word_serializer
@@ -26,9 +32,15 @@ class SingleWordView(generics.RetrieveAPIView):
         self.word = get_object_or_404(Word, word=self.kwargs['word'])
         return Word.objects.filter(word = self.word)
 
-class WordRelationView(generics.ListCreateAPIView):
-    queryset = WordRelation.objects.all()
+class WordRelationView(generics.ListAPIView):
     serializer_class = wordRelation_serializer
+    pagination_class = LargeResultsSetPagination
+    
+    def get_queryset(self):
+        self.lookup_field = 'word1' 
+        self.word = get_object_or_404(Word, word=self.kwargs['word1'])
+        self.wordRelation = get_list_or_404(WordRelation, word1=self.word)
+        return self.wordRelation
 """
     parser_classes = (MultiPartParser, FormParser)
 

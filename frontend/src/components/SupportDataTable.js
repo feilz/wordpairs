@@ -1,46 +1,15 @@
-import React, {useState} from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import key from 'weak-key';
 
-const Table = ({
-    data,
-    setTopTableData,
-    getNewData,
-    getRelatedData,
-    paginationUrls
-}) => {
-    const [order, setOrder] = useState({});
-
-    const sortFunc = sortKey => {
-        const sortOrder = order[sortKey] ? !order[sortKey] : true;
-        const newData = data.sort((obj1, obj2) =>
-            obj1[sortKey] > obj2[sortKey]
-                ? sortOrder
-                    ? -1
-                    : 1
-                : obj1[sortKey] < obj2[sortKey]
-                ? sortOrder
-                    ? 1
-                    : -1
-                : 0
-        );
-        setOrder({...order, [sortKey]: sortOrder});
-        setTopTableData([...newData]);
-    };
-
-    return !data.length ? (
+const SupportDataTable = ({data, mSort}) =>
+    !data.length ? (
         <p>Nothing to show</p>
     ) : (
         <div className="column">
             <h2 className="subtitle">
                 Showing <strong>{data.length} items</strong>
             </h2>
-            <button onClick={() => getNewData(paginationUrls.prev)}>
-                Previous
-            </button>
-            <button onClick={() => getNewData(paginationUrls.next)}>
-                Next
-            </button>
             <table className="table is-striped">
                 <thead>
                     <tr>
@@ -48,9 +17,7 @@ const Table = ({
                             el[0] === 'id' ? (
                                 ''
                             ) : (
-                                <th
-                                    onClick={() => sortFunc(el[0])}
-                                    key={key(el)}>
+                                <th onClick={() => mSort(el[0])} key={key(el)}>
                                     {el[0]}
                                 </th>
                             )
@@ -80,8 +47,7 @@ const Table = ({
                                     <button
                                         onClick={() =>
                                             getRelatedData(
-                                                `http://localhost:8000/api/wordrelation/${el.word}/`,
-                                                el.word
+                                                `http://localhost:8000/api/wordrelation/${el.word}/`
                                             )
                                         }>
                                         Get Related words!
@@ -94,14 +60,12 @@ const Table = ({
                     ))}
                 </tbody>
             </table>
-            <button onClick={() => getNewData(paginationUrls.prev)}>
-                Previous
-            </button>
-            <button onClick={() => getNewData(paginationUrls.next)}>
-                Next
-            </button>
         </div>
     );
+
+SupportDataTable.propTypes = {
+    data: PropTypes.array.isRequired,
+    sortFunc: PropTypes.func
 };
 
-export default Table;
+export default SupportDataTable;

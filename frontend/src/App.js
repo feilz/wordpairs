@@ -7,45 +7,46 @@ import Navbar from './components/Navbar';
 
 export default () => {
     const [topTableData, setTopTableData] = useState([]);
-    const [order, setOrder] = useState({});
+    const [supportData, setSupportData] = useState([]);
+    const [paginationUrls, setPaginationUrls] = useState({});
+    const [supportPaginationUrls, setSupportPaginationUrls] = useState({});
 
     const callFunc = async () => {
         const res = await fetch('http://localhost:8000/api/scan/');
         console.log(res);
     };
 
-    const sortFunc = sortKey => {
-        const data = topTableData;
-        const sortOrder = order[sortKey] ? !order[sortKey] : true;
-        const newData = data.sort((obj1, obj2) =>
-            sortOrder
-                ? obj1[sortKey] > obj2[sortKey]
-                    ? -1
-                    : obj1[sortKey] < obj2[sortKey]
-                    ? 1
-                    : 0
-                : obj1[sortKey] < obj2[sortKey]
-                ? -1
-                : obj1[sortKey] > obj2[sortKey]
-                ? 1
-                : 0
-        );
-        setOrder({...order, [sortKey]: sortOrder});
-        setTopTableData([...newData]);
-    };
-
-    const getData = async url => {
+    const getRelatedData = async (url, wrd) => {
         const response = await fetch(url, {mode: 'cors'});
-        console.log(response);
         if (response.status !== 200) {
             console.log('something went wrong');
             return;
         }
         const data = response.json();
         data.then(data => {
-            if (!Array.isArray(data)) data = [data];
-            setTopTableData(data);
+            //if (!Array.isArray(data)) data = [data];
+            console.log(data);
+            setSupportData(data.results);
+            setTopTableData(topTableData.filter(data => data.word === wrd));
+            setSupportPaginationUrls({next: data.next, prev: data.previous});
         });
+    };
+
+    const getData = async url => {
+        const response = await fetch(url, {mode: 'cors'});
+        //console.log(response);
+        if (response.status !== 200) {
+            console.log('something went wrong');
+            return;
+        }
+        const data = response.json();
+        data.then(data => {
+            //if (!Array.isArray(data)) data = [data];
+            console.log(data);
+            setTopTableData(data.results);
+            setPaginationUrls({next: data.next, prev: data.previous});
+        });
+        setSupportData([]);
     };
 
     return (
@@ -74,8 +75,21 @@ export default () => {
                         <Route path="/">
                             <Table
                                 data={topTableData}
-                                mSort={v => sortFunc(v)}
+                                setTopTableData={setTopTableData}
                                 getNewData={url => getData(url)}
+                                getRelatedData={(url, wrd) =>
+                                    getRelatedData(url, wrd)
+                                }
+                                paginationUrls={paginationUrls}
+                            />
+                            <Table
+                                data={supportData}
+                                setTableData={setSupportData}
+                                getNewData={url => getData(url)}
+                                getRelatedData={(url, wrd) =>
+                                    getRelatedData(url, wrd)
+                                }
+                                paginationUrls={supportPaginationUrls}
                             />
                         </Route>
                     </Switch>

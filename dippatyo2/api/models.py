@@ -25,6 +25,8 @@ class Word(models.Model):
     objects = WordManager()
     def __str__(self):
         return self.word
+    class Meta:
+        ordering = ['-occurrences']
 
 class WdManager(models.Manager):
     def createWD(self, dist):
@@ -64,6 +66,8 @@ class DateOfPost(models.Model):
     dateOfPost = models.DateTimeField()
     occurrences = models.IntegerField(default=0)
     objects = DateManager()
+    def __str__(self):
+        return str(self.dateOfPost)
 
 class WordRelationManager(models.Manager):
     def createWordRelation(self, word1, word2, wordDistance, date):
@@ -96,6 +100,9 @@ class WordRelation(models.Model):
     date = models.ForeignKey(DateOfPost, on_delete=models.CASCADE)
     def __str__(self):
         return self.word1.word + "-" + self.word2.word
+    class Meta:
+        ordering = ['-occurrences']
+        
 
 
 class NicknameOfPosterManager(models.Manager):

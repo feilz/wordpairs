@@ -17,6 +17,9 @@ class word_serializer(serializers.ModelSerializer):
         fields = ('__all__')
 
 class wordRelation_serializer(serializers.ModelSerializer):
+    word1 = serializers.StringRelatedField()
+    word2 = serializers.StringRelatedField()
+    date = serializers.StringRelatedField()
     class Meta:
         model = WordRelation
-        fields = ('__all__')
+        fields = ('word1', 'word2', 'occurrences', 'date')
