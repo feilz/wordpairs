@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import datetime
 
+
 class File(models.Model):
     file = models.FileField(blank=False, null=False)
     def __str__(self):
@@ -9,6 +10,7 @@ class File(models.Model):
 class Sample(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField()
+    age = models.IntegerField()
     message = models.CharField(max_length=300)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -20,7 +22,7 @@ class WordManager(models.Manager):
         return wrd
 
 class Word(models.Model):
-    word = models.CharField(max_length=100)
+    word = models.CharField(max_length=101)
     occurrences = models.IntegerField(default=0)
     objects = WordManager()
     def __str__(self):
@@ -39,8 +41,6 @@ class WdManager(models.Manager):
             wd.mediumDistance += 1
         elif dist < 15:
             wd.longDistance += 1
-        else:
-            wd.tooLongDistance += 1
         wd.save()
         return wd
     
@@ -50,7 +50,6 @@ class WordDistance(models.Model):
     shortDistance = models.IntegerField(default=0) #3-5
     mediumDistance = models.IntegerField(default=0) #6-8
     longDistance = models.IntegerField(default=0) #9-14
-    tooLongDistance = models.IntegerField(default=0) #15+
     objects = WdManager()
 
 class DateManager(models.Manager):
@@ -71,7 +70,13 @@ class DateOfPost(models.Model):
 
 class WordRelationManager(models.Manager):
     def createWordRelation(self, word1, word2, wordDistance, date):
-        wrdRel, created = WordRelation.objects.get_or_create(word1 = word1, word2 = word2)
+        try:
+            wrdRel, created = WordRelation.objects.get_or_create(word1 = word1, word2 = word2)
+        except WordRelation.MultipleObjectsReturned:
+            duplicates = WordRelation.objects.filter(word1 = word1, word2 = word2)
+            wrdRel = duplicates[0]
+            for dup in duplicates[1:]:
+                dup.delete()
         if not wrdRel.wordDistance:
             wrdRel.wordDistance = wordDistance
         else:
@@ -79,11 +84,10 @@ class WordRelationManager(models.Manager):
             wrdRel.wordDistance.closeDistance += wordDistance.closeDistance
             wrdRel.wordDistance.mediumDistance += wordDistance.mediumDistance
             wrdRel.wordDistance.longDistance += wordDistance.longDistance
-            wrdRel.wordDistance.tooLongDistance += wordDistance.tooLongDistance
         wrdRel.occurrences += 1
         wrdRel.save()
-        wrdRel.date.add(date)
-        return wrdRel 
+        #wrdRel.date.add(date)
+        return wrdRel
 
 class WordRelation(models.Model):
     word1 = models.ForeignKey(Word, on_delete=models.CASCADE, related_name="word1")
@@ -97,7 +101,7 @@ class WordRelation(models.Model):
         null=True
     )
     objects = WordRelationManager()
-    date = models.ForeignKey(DateOfPost, on_delete=models.CASCADE)
+    #date = models.ForeignKey(DateOfPost, on_delete=models.CASCADE)
     def __str__(self):
         return self.word1.word + "-" + self.word2.word
     class Meta:

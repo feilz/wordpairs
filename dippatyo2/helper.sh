@@ -4,8 +4,7 @@ drop() {
     echo "Droping all tables prefixed with $1_."
     echo
     echo "\\dt" | ./manage.py dbshell |
-    egrep "^$1_" | xargs -I "@@" echo "DROP TABLE @@;" |
-    ./manage.py dbshell
+    egrep "^$1_" | xargs -I "@@" echo "DROP TABLE @@;" | ./manage.py dbshell
     echo "Tables dropped."
     echo
 }

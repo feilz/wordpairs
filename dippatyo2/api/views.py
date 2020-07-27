@@ -32,6 +32,11 @@ class SingleWordView(generics.RetrieveAPIView):
         self.word = get_object_or_404(Word, word=self.kwargs['word'])
         return Word.objects.filter(word = self.word)
 
+class AllWordRelations(generics.ListAPIView):
+    queryset = WordRelation.objects.all()
+    serializer_class = wordRelation_serializer
+    pagination_class = LargeResultsSetPagination
+
 class WordRelationView(generics.ListAPIView):
     serializer_class = wordRelation_serializer
     pagination_class = LargeResultsSetPagination

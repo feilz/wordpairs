@@ -11,6 +11,11 @@ import re
 from api.models import Word, WordRelation, WordDistance, NicknameOfPoster, DateOfPost
 from .keywords import illness_list, treatment_list, death_list, social_list, financial_list
 
+stopwords_file = open("filescanner/scanner/finnish_stopwords.txt","r")
+lines = stopwords_file.read().split(",")
+stopwords = lines[0].split("\n")
+stopwords_file.close()
+
 keyword_list = [illness_list, treatment_list, death_list, social_list, financial_list]
 
 wordcount = {}
@@ -116,7 +121,7 @@ def checkTopic(topics,righttopics):
     return False
 
 def addSentence(w, nickname, date):
-    wordlist=[word for word in w.split()]
+    wordlist=[word.lower() for word in w.split() if not any(word in s for s in stopwords)]
     for i in range(len(wordlist)):
         for j in range(i+1,len(wordlist)):
             if len(wordlist[i]) >= 2 and len(wordlist[j]) >= 2 and wordlist[i]!=wordlist[j] and wordlist[i] != " " and wordlist[j] != " " and j-i < 20:
@@ -164,12 +169,11 @@ def convertToConllu(sent):
          newSent+=(u"%d\t%s\t_\t_\t_\t_\t_\t_\t_\t_\t_\t_\t_\t_\n"%(tIdx+1,t)) #.encode("utf-8")
     return newSent
 
+
+
 def scan():
     righttopics = ["Paikkakunnat","Terveys"]
-    #stopwords_file = open("../scraper-test/finnish_stopwords.txt","r")
-    #lines = stopwords_file.read().split(",")
-    #stopwords = lines[0].split("\n")
-    #stopwords_file.close()
+
     #location of json folder to read data from
     files = listdir("filescanner/uploadFiles/")
 

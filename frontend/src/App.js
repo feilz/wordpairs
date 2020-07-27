@@ -12,6 +12,7 @@ export default () => {
     const [supportPaginationUrls, setSupportPaginationUrls] = useState({});
 
     const callFunc = async () => {
+        console.log("rescan test");
         const res = await fetch('http://localhost:8000/api/scan/');
         console.log(res);
     };
@@ -93,7 +94,7 @@ export default () => {
                             />
                         </Route>
                     </Switch>
-                    <button type="submit" onClick={() => callFunc}>
+                    <button type="submit" onClick={callFunc}>
                         TestScan
                     </button>
                 </div>
