@@ -40,12 +40,15 @@ class AllWordRelations(generics.ListAPIView):
 class WordRelationView(generics.ListAPIView):
     serializer_class = wordRelation_serializer
     pagination_class = LargeResultsSetPagination
-    
+
     def get_queryset(self):
-        self.lookup_field = 'word1' 
+        self.lookup_field = 'word1'
         self.word = get_object_or_404(Word, word=self.kwargs['word1'])
         self.wordRelation = get_list_or_404(WordRelation, word1=self.word)
-        return self.wordRelation
+        list2 = get_list_or_404(WordRelation, word2=self.word)
+        returnedList = self.wordRelation + list2
+        returnedList.sort(reverse=True, key=lambda wordpair: wordpair.occurrences)
+        return returnedList
 """
     parser_classes = (MultiPartParser, FormParser)
 

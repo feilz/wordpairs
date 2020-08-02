@@ -8,15 +8,16 @@ from pprint import pprint
 import string
 import nltk
 import re
-from api.models import Word, WordRelation, WordDistance, NicknameOfPoster, DateOfPost
+from api.models import Word, WordRelation, NicknameOfPoster, DateOfPost
 from .keywords import illness_list, treatment_list, death_list, social_list, financial_list
 
-stopwords_file = open("filescanner/scanner/finnish_stopwords.txt","r")
+stopwords_file = open("filescanner/scanner/finnish_stopwords.txt","r", encoding="utf8")
 lines = stopwords_file.read().split(",")
 stopwords = lines[0].split("\n")
 stopwords_file.close()
 
-keyword_list = [illness_list, treatment_list, death_list, social_list, financial_list]
+keyword_list = illness_list 
+#[illness_list, treatment_list, death_list, social_list, financial_list]
 
 wordcount = {}
 
@@ -44,20 +45,15 @@ def addword(word,dist):
         for k in vals:
             obj[k] += vals[k]
 
-def createWordDistance(dist):
-    wd = WordDistance.objects.createWD(dist)
-    return wd
-
 def createWord(word):
     w = Word.objects.createWord(word)
     return w
 
-def createWordPair(word1, word2, dist, date):
+def createWordPair(word1, word2, dist):
     wp = WordRelation.objects.createWordRelation(
             createWord(word1), 
             createWord(word2), 
-            createWordDistance(dist), 
-            date
+            dist
         )
     return wp
 
@@ -121,13 +117,18 @@ def checkTopic(topics,righttopics):
     return False
 
 def addSentence(w, nickname, date):
-    wordlist=[word.lower() for word in w.split() if not any(word in s for s in stopwords)]
+    wordlist=[]
+    for word in w.split():
+        if not any(word.lower() in s for s in stopwords):
+            wordlist.append(word.lower())
+        else:
+            wordlist.append(",")#to keep wordDistance correct, even if we're not adding that particular stopword
+    #wordlist=[word.lower() for word in w.split() if not any(word.lower() in s for s in stopwords)]
     for i in range(len(wordlist)):
         for j in range(i+1,len(wordlist)):
-            if len(wordlist[i]) >= 2 and len(wordlist[j]) >= 2 and wordlist[i]!=wordlist[j] and wordlist[i] != " " and wordlist[j] != " " and j-i < 20:
-                dateofpost = DateOfPost.objects.createDateOfPost(date)
-                wordPair = createWordPair(wordlist[i], wordlist[j], j-i, dateofpost)
-                nickname = NicknameOfPoster.objects.createNickname(nickname, wordPair)    
+            if len(wordlist[i]) >= 2 and len(wordlist[j]) >= 2 and wordlist[i]!=wordlist[j] and wordlist[i] != " " and wordlist[j] != " " and j-i < 16:
+                wordPair = createWordPair(wordlist[i], wordlist[j], j-i)
+                #nickname = NicknameOfPoster.objects.createNickname(nickname, wordPair)    
 
 
 regexp = re.compile(r'[^a-zA-Z0-9åäöÅÄÖ]')
@@ -193,20 +194,17 @@ def scan():
                     date = o["created_at"]
                     newbody = checkSentence(body)
                     for sentence in newbody:
-     
-                        addSentence(sentence, nick, date)
-
-                    """    
+                        addSentence(sentence, nick, date)    
                     for c in o["comments"]:
                         if c["deleted"]:
                             continue
                         sent = c["body"]
+                        n = c["anonnick"]
+                        d = c["created_at"]
                         sent = checkSentence(sent)
                         for s in sent:
-                            data["comments"]+=1
                             #cleanC = [word for word in body.split() if word.lower() not in stopwords]
-                            addSentence(s)
-                    """
+                            addSentence(s, n, d)
             except ValueError:
                 print("ValueError")
                 continue

@@ -30,28 +30,6 @@ class Word(models.Model):
     class Meta:
         ordering = ['-occurrences']
 
-class WdManager(models.Manager):
-    def createWD(self, dist):
-        wd = WordDistance()
-        if dist <3:
-            wd.closeDistance += 1
-        elif dist < 6:
-            wd.shortDistance += 1
-        elif dist < 9:
-            wd.mediumDistance += 1
-        elif dist < 15:
-            wd.longDistance += 1
-        wd.save()
-        return wd
-    
-
-class WordDistance(models.Model):
-    closeDistance = models.IntegerField(default=0) #1-2
-    shortDistance = models.IntegerField(default=0) #3-5
-    mediumDistance = models.IntegerField(default=0) #6-8
-    longDistance = models.IntegerField(default=0) #9-14
-    objects = WdManager()
-
 class DateManager(models.Manager):
     def createDateOfPost(self, timestamp):
         date = datetime.fromtimestamp(timestamp / 1e3) 
@@ -69,7 +47,7 @@ class DateOfPost(models.Model):
         return str(self.dateOfPost)
 
 class WordRelationManager(models.Manager):
-    def createWordRelation(self, word1, word2, wordDistance, date):
+    def createWordRelation(self, word1, word2, wordDistance):
         try:
             wrdRel, created = WordRelation.objects.get_or_create(word1 = word1, word2 = word2)
         except WordRelation.MultipleObjectsReturned:
@@ -77,13 +55,15 @@ class WordRelationManager(models.Manager):
             wrdRel = duplicates[0]
             for dup in duplicates[1:]:
                 dup.delete()
-        if not wrdRel.wordDistance:
-            wrdRel.wordDistance = wordDistance
-        else:
-            wrdRel.wordDistance.shortDistance += wordDistance.shortDistance
-            wrdRel.wordDistance.closeDistance += wordDistance.closeDistance
-            wrdRel.wordDistance.mediumDistance += wordDistance.mediumDistance
-            wrdRel.wordDistance.longDistance += wordDistance.longDistance
+        if wordDistance <3:
+            wrdRel.closeDistance += 1
+        elif wordDistance < 6:
+            wrdRel.shortDistance += 1
+        elif wordDistance < 9:
+            wrdRel.mediumDistance += 1
+        elif wordDistance < 15:
+            wrdRel.longDistance += 1 
+
         wrdRel.occurrences += 1
         wrdRel.save()
         #wrdRel.date.add(date)
@@ -94,14 +74,12 @@ class WordRelation(models.Model):
     word2 = models.ForeignKey(Word, on_delete=models.CASCADE, related_name="word2")
     occurrences = models.IntegerField(default=0)
     inComment = models.IntegerField(default=0)
-    wordDistance = models.OneToOneField(
-        WordDistance, 
-        on_delete=models.CASCADE, 
-        blank=True, 
-        null=True
-    )
     objects = WordRelationManager()
     #date = models.ForeignKey(DateOfPost, on_delete=models.CASCADE)
+    closeDistance = models.IntegerField(default=0) #1-2
+    shortDistance = models.IntegerField(default=0) #3-5
+    mediumDistance = models.IntegerField(default=0) #6-8
+    longDistance = models.IntegerField(default=0) #9-14
     def __str__(self):
         return self.word1.word + "-" + self.word2.word
     class Meta:

@@ -1,9 +1,9 @@
 import React, {useState} from 'react';
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
-import DataProvider from './components/DataProvider';
 import Table from './components/Table';
 import Upload from './components/upload/Upload';
 import Navbar from './components/Navbar';
+
 
 export default () => {
     const [topTableData, setTopTableData] = useState([]);
@@ -18,7 +18,14 @@ export default () => {
     };
 
     const getRelatedData = async (url, wrd) => {
-        const response = await fetch(url, {mode: 'cors'});
+        const response = await fetch(url, {
+            mode: 'cors',
+            method: 'GET',
+            headers: {
+                'Accept': "application/json",
+                'Content-Type': "application/json;charset=UTF-8"
+            }
+        });
         if (response.status !== 200) {
             console.log('something went wrong');
             return;
@@ -34,7 +41,14 @@ export default () => {
     };
 
     const getData = async url => {
-        const response = await fetch(url, {mode: 'cors'});
+        const response = await fetch(url, {
+            mode: 'cors',
+            method: 'GET',
+            headers: {
+                'Accept': "application/json",
+                'Content-Type': "application/json;charset=UTF-8"
+            }
+        });
         //console.log(response);
         if (response.status !== 200) {
             console.log('something went wrong');
